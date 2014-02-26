@@ -21,12 +21,19 @@ include_recipe "openldap::client"
 include_recipe "openssh"
 include_recipe "nscd"
 
-package "libnss-ldap" do
-  action :upgrade
-end
-
-package "libpam-ldap" do
-  action :upgrade
+case platform[:family]
+when 'redhat'
+  %w{ nss-ldap pam-ldap }.each do |name|
+    package name do
+      action :upgrade
+    end
+  end
+when 'debian'
+  %w{ libnss-ldap libpam-ldap }.each do |name|
+    package name do 
+      action :upgrade
+    end
+  end
 end
 
 template "/etc/ldap.conf" do
