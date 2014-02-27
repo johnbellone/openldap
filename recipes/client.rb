@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-case platform[:family]
+case node[:platform_family]
 when 'redhat'
   package 'openldap-clients' do
     action :upgrade
@@ -30,6 +30,6 @@ end
 
 directory node['openldap']['ssl_dir'] do
   mode 00755
-  owner "root"
-  group "root"
+  user node['openldap']['user']
+  group node['openldap']['group']
 end

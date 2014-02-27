@@ -28,19 +28,27 @@ when "ubuntu"
     action :create
     recursive true
     mode 00700
-    owner "root"
-    group "root"
+    owner node['openldap']['user']
+    group node['openldap']['group']
   end
 
   cookbook_file "#{node['openldap']['preseed_dir']}/slapd.seed" do
     source "slapd.seed"
     mode 00600
-    owner "root"
-    group "root"
+    owner node['openldap']['user']
+    group node['openldap']['group']
   end
 
   package "slapd" do
     response_file "slapd.seed"
+    action :upgrade
+  end
+when 'centos', 'redhat'
+  package 'db4-utils' do
+    action :upgrade
+  end
+
+  package 'openldap-servers' do
     action :upgrade
   end
 else
@@ -57,8 +65,8 @@ if node['openldap']['tls_enabled'] && node['openldap']['manage_ssl']
   cookbook_file node['openldap']['ssl_cert'] do
     source "ssl/#{node['openldap']['server']}.pem"
     mode 00644
-    owner "root"
-    group "root"
+    owner node['openldap']['user']
+    group node['openldap']['group']
   end
 end
 
@@ -69,21 +77,21 @@ end
 if (node['platform'] == "ubuntu")
   template "/etc/default/slapd" do
     source "default_slapd.erb"
-    owner "root"
-    group "root"
+    owner node['openldap']['user']
+    group node['openldap']['group']
     mode 00644
   end
 
   directory "#{node['openldap']['dir']}/slapd.d" do
     recursive true
-    owner "openldap"
-    group "openldap"
+    owner node['openldap']['user']
+    group node['openldap']['group']
     action :create
   end
 
   execute "slapd-config-convert" do
     command "slaptest -f #{node['openldap']['dir']}/slapd.conf -F #{node['openldap']['dir']}/slapd.d/"
-    user "openldap"
+    user node['openldap']['user']
     action :nothing
     notifies :start, "service[slapd]", :immediately
   end
@@ -91,8 +99,8 @@ if (node['platform'] == "ubuntu")
   template "#{node['openldap']['dir']}/slapd.conf" do
     source "slapd.conf.erb"
     mode 00640
-    owner "openldap"
-    group "openldap"
+    owner node['openldap']['user']
+    group node['openldap']['group']
     notifies :stop, "service[slapd]", :immediately
     notifies :run, "execute[slapd-config-convert]"
   end
@@ -101,6 +109,9 @@ else
   when "debian","ubuntu"
     template "/etc/default/slapd" do
       source "default_slapd.erb"
+      user node['openldap']['user']
+      group node['openldap']['group']
+
       owner "root"
       group "root"
       mode 00644
@@ -110,8 +121,9 @@ else
   template "#{node['openldap']['dir']}/slapd.conf" do
     source "slapd.conf.erb"
     mode 00640
-    owner "openldap"
-    group "openldap"
+    user node['openldap']['user']
+    group node['openldap']['group']
+
     notifies :restart, "service[slapd]"
   end
 end

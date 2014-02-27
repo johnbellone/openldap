@@ -21,9 +21,9 @@ include_recipe "openldap::client"
 include_recipe "openssh"
 include_recipe "nscd"
 
-case platform[:family]
+case node[:platform_family]
 when 'redhat'
-  %w{ nss-ldap pam-ldap }.each do |name|
+  %w{ nss_ldap pam_ldap }.each do |name|
     package name do
       action :upgrade
     end
